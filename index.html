@@ -40,6 +40,18 @@ h1{font-family:var(--display);font-size:clamp(1.5rem,6vw,2.6rem);margin:0;line-h
 .sw{width:34px;height:34px;padding:0;border-radius:50%}
 .sw.on{outline:4px solid var(--paper);outline-offset:1px;background:var(--c)}
 .note{margin:0;font-size:.85rem;max-width:520px;text-align:center}
+.foe{display:flex;gap:10px;align-items:center;background:var(--paper);border:3px solid var(--ink);padding:6px 10px;width:min(100%,520px);font-size:.9rem;flex:none}
+.foe img{width:56px;height:56px;background:#fff;border:2px solid var(--ink);flex:none}
+.foe div{min-width:0}
+.aff{margin:0;font-size:.9rem;line-height:1.6}
+.best{margin:0;font-family:var(--display);font-size:1.15rem;background:var(--ink);color:var(--paper);padding:.15em .8em;transform:rotate(-1deg)}
+.best b{color:var(--yellow);font-size:1.7rem;font-weight:400;padding:0 .15em}
+#streak{position:absolute;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) rotate(-2deg);font-family:var(--display);font-size:clamp(1.6rem,7vw,2.6rem);
+  color:var(--yellow);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;pointer-events:none;white-space:nowrap}
+#rBig{font-family:var(--display);text-align:center;line-height:1;color:var(--red);font-size:1.6rem}
+#rBig b{font-size:5.5rem;font-weight:400;-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
+#rBest{margin:0;text-align:center;font-family:var(--display)}
+#rBest em{font-style:normal;background:var(--yellow);border:2px solid var(--ink);padding:0 .4em;margin-left:.4em}
 /* overlays */
 .over{position:absolute;inset:0;background:rgba(29,26,22,.72);display:flex;padding-inline:16px;padding-block:16px;overflow-y:auto;z-index:20}
 .card{background:var(--paper);border:4px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:16px;width:min(100%,420px);
@@ -83,37 +95,42 @@ ol.rank{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:4px}
 
 <div id="draw" class="screen">
   <h1>お絵描きブレード</h1>
-  <p class="catch">最強の絵を描け。</p>
+  <p class="catch">最強の絵を描け。何連勝できるかで強さが決まる。</p>
+  <p class="best">ベスト記録<b id="bestN">0</b>連勝</p>
+  <div class="foe"><img id="fImg" alt="次の相手"><div><b id="fTitle"></b><br><span id="fInfo"></span></div></div>
   <div id="padwrap"><canvas id="pad" width="384" height="384"></canvas>
     <div id="hint">ここに何か描く。<br>上手さは関係ない。形が性能になる。</div></div>
   <div class="tools" id="colors"></div>
   <div class="tools">
     <button id="w0">細</button><button id="w1" class="on">中</button><button id="w2">太</button>
-    <button id="undo">1本もどす</button><button id="clear">全部消す</button><button id="rnd">おまかせ落書き</button>
+    <button id="undo">1本もどす</button><button id="clear">全部消す</button><button id="rnd">おまかせ落書き</button><button id="snd2">音 ON</button>
   </div>
   <button class="go" id="make">この絵をコマにする</button>
   <div class="tools"><input id="code" placeholder="友達の対戦コードを貼る" aria-label="対戦コード"><button id="useCode">この絵と戦う</button></div>
   <p class="note" id="codeMsg" hidden></p>
-  <p class="note">丸は安定、トゲは攻撃、棒は高速、穴はすり抜け、大きい輪は引き込み。変な形ほど何か起きる。最強の型が4つ隠れている。うち3つはオーラが出る。茶色で描くだけでは足りない。</p>
+  <p class="note">相性（→は「に強い」）　色：赤→緑→青→赤、黄→紫→黒→黄、青→茶。太さ：細→太→中→細。形：トゲ→丸→棒・変形→トゲ。<br>最強の型が4つ隠れている。うち3つはオーラが出る。負けるまで続く連戦。途中で絵は描き直せない。第9戦以降はオーラ持ちだけが出る。</p>
 </div>
 
 <div id="battle" class="screen" hidden>
   <div id="gl"></div>
   <div id="hud"></div>
   <div id="cams"><button data-c="auto" class="on">自動</button><button data-c="top">上空</button><button data-c="side">斜め</button><button data-c="near">接近</button><button id="snd">音 ON</button></div>
+  <div id="streak"></div>
   <div id="count"></div>
-  <div id="talk">土俵をタップすると、あなたの絵がそこへ突進します。</div>
+  <div id="talk">描いたあとは見守るだけ。絵の形がすべてを決めます。</div>
 </div>
 
 <div id="cardO" class="over" hidden><div class="card">
   <div class="row"><img id="cImg" alt="あなたの絵"><div><div id="cType" style="font-size:.85rem"></div><h2 id="cName"></h2></div></div>
   <p id="cKan" style="margin:0"></p>
   <p class="abil" id="cAbil"></p>
+  <p class="aff" id="cAff"></p>
   <div id="cBars"></div>
   <div class="btns"><button id="back">描き直す</button><button class="go" id="fight">土俵に投入</button></div>
 </div></div>
 
 <div id="resO" class="over" hidden><div class="card">
+  <div id="rBig"></div><p id="rBest"></p>
   <h2 id="rTitle"></h2><p id="rText" style="margin:0"></p>
   <p class="abil" id="rWhy"></p>
   <img id="rImg" alt="結果カード">
@@ -237,6 +254,8 @@ const DOODLES={
  '小さい丸':()=>[S(rc(),14,ell(192,192,60,60))],
  'よこ長だ円':()=>[S(rc(),14,ell(192,192,168,80))],
  'たて長だ円':()=>[S(rc(),14,ell(192,192,80,168))],
+ 'にじ':()=>[K[1],K[4],K[3],K[2],K[6]].map((c,i)=>S(c,16,arc(192,320,170-i*30,250-i*40,3.1416,6.2832,20))),
+ 'ただの点':()=>[D(192,192,28)],
  '二重丸':()=>[S(K[1],14,ell(192,192,155,155,36)),S(K[1],14,ell(192,192,90,90))]
 };
 [['三角',3],['五角形',5],['六角形',6],['七角形',7],['八角形',8]].forEach(([n,k])=>DOODLES[n]=()=>[S(rc(),16,poly(192,192,160,k))]);
@@ -253,8 +272,13 @@ $('rnd').onclick=()=>{strokes=wobble(DOODLES[pick(Object.keys(DOODLES))]());redr
 function comps(N,pred,c8){const seen=new Uint8Array(N),out=[];for(let s=0;s<N;s++){if(seen[s]||!pred(s))continue;let n=0,st=[s];seen[s]=1;
   while(st.length){const i=st.pop();n++;const x=i%G,y=i/G|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy||(!c8&&dx&&dy))continue;
     const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=G||ny>=G)continue;const j=ny*G+nx;if(!seen[j]&&pred(j)){seen[j]=1;st.push(j)}}}out.push(n)}return out}
+const T1=16,T2=27,COLN=['黒','赤','青','緑','黄','茶','紫'],TKN=['細','中','太'],SHN=['丸系','トゲ系','棒・変形系'];
+const CB={1:[3],3:[2],2:[1,5],4:[6],6:[0],0:[4]},TB={0:[2],2:[1],1:[0]},SB={1:[0],0:[2],2:[1]},cmp=(M,a,b)=>(M[a]||[]).includes(b)?1:(M[b]||[]).includes(a)?-1:0;
+const aff=(a,b)=>[cmp(CB,a.ci,b.ci),cmp(TB,a.tk,b.tk),cmp(SB,a.sh,b.sh)],AW=v=>v>0?'<b style="color:var(--red)">有利</b>':v<0?'<b style="color:var(--blue)">不利</b>':'互角';
 function analyze(cv,name){
   const d=cv.getContext('2d').getImageData(0,0,CS,CS).data,N=G*G,ink=new Uint8Array(N),col=new Array(N);
+  let A2=0,P2=0;for(let y=0;y<CS;y++)for(let x=0;x<CS;x++){const k=(y*CS+x)*4+3;if(d[k]>80){A2++;if(!x||!y||x==CS-1||y==CS-1||d[k-4]<=80||d[k+4]<=80||d[k-CS*4]<=80||d[k+CS*4]<=80)P2++}}
+  const lw=2*A2/Math.max(1,P2),tk=lw<T1?0:lw<T2?1:2;
   for(let gy=0;gy<G;gy++)for(let gx=0;gx<G;gx++){let c=0,r=0,g=0,b=0;
     for(let y=0;y<PX;y++)for(let x=0;x<PX;x++){const k=((gy*PX+y)*CS+gx*PX+x)*4;if(d[k+3]>80){c++;r+=d[k];g+=d[k+1];b+=d[k+2]}}
     if(c>=5){ink[gy*G+gx]=1;col[gy*G+gx]=[r/c,g/c,b/c]}}
@@ -311,7 +335,8 @@ function analyze(cv,name){
   const KAN={eye:['まばたきを忘れた月','こっちを見ている皿'],rainbow:['絵の具の事故','欲張りな虹'],dot:['描き忘れかけた点','宇宙の中心'],poop:['自信に満ちた何か','食後の茶色いソフトクリーム'],speed:['のびきった麺','怒った物干し竿','やる気のない矢印'],ghost:['穴のあいた靴下','働きすぎのチーズ'],pull:['帰ってこない浮き輪','空腹のドーナツ'],burst:['残業中の星','ヒトデの親戚'],bounce:['寝起きのウニ','反抗期の太陽'],random:['説明を拒む生き物','夢に出てくるやつ'],tip:['怒ったおにぎり','機嫌の悪い山'],heavy:['動く気のない冷蔵庫','座り込んだ家'],stable:['考えるのをやめた月','自信のあるまんじゅう'],chaos:['片方だけ伸びた靴下','酔った雲']};
   const kantei=pick(KAN[abil]);
   const boost=weird*.15*(poop?1:1), m=leg?1.3:1, f=v=>Math.round(clamp((v+boost)*m,5,100));
-  return{name,cv,kantei,leg,aura:leg&&abil!='dot',ink,col,fill:Array.from({length:N},(_,i)=>fill(i)?1:0),cx,cy,prof,mean,maxR,type,abil,desc,weird:Math.round(weird),
+  const ci=cc.indexOf(Math.max(...cc)),sh=leg?-1:['stable','pull','heavy'].includes(abil)?0:['bounce','burst','tip'].includes(abil)?1:2;
+  return{name,cv,kantei,leg,ci,tk,sh,lw,aura:leg&&abil!='dot',ink,col,fill:Array.from({length:N},(_,i)=>fill(i)?1:0),cx,cy,prof,mean,maxR,type,abil,desc,weird:Math.round(weird),
     st:{atk:f(atk),wt:f(wt),spin:f(spin),stab:f(stab),spd:f(spd)}};
 }
 
@@ -324,33 +349,88 @@ function dec(str){str=str.trim();if(!str.startsWith('OB1-'))return null;try{cons
   while(i+3<=t.length){const c=COLORS[t.charCodeAt(i)]||COLORS[0],w=clamp(t.charCodeAt(i+1),4,40),n=t.charCodeAt(i+2);i+=3;const p=[];for(let k=0;k<n&&i+1<t.length;k++,i+=2)p.push([t.charCodeAt(i)*2,t.charCodeAt(i+1)*2]);if(p.length)ss.push({c,w,p})}
   return ss.length?ss:null}catch(e){return null}}
 $('useCode').onclick=()=>{const ss=dec($('code').value),m=$('codeMsg');m.hidden=false;
+  if(!$('code').value.trim()&&foe.duel){newFoe();m.textContent='連勝モードに戻しました。';return}
   if(!ss){rival=null;m.textContent='コードを読めませんでした。OB1- から始まる文字列を丸ごと貼ってください。';return}
   const c=document.createElement('canvas');c.width=c.height=CS;const x=c.getContext('2d');ss.forEach(s=>drawStroke(x,s));const a=analyze(c,'挑戦者の絵');
-  if(!a){rival=null;m.textContent='このコードの絵は小さすぎて戦えません。';return}rival=c;m.textContent='挑戦者の絵（'+a.type+'）を土俵に呼びました。あなたの絵を描いてください。'};
+  if(!a){rival=null;m.textContent='このコードの絵は小さすぎて戦えません。';return}a.lv=1;a.duel=true;foe=a;renderFoe();m.textContent='挑戦者の絵（'+a.type+'）との1対1勝負にしました。連勝記録には数えません。やめるときは入力欄を空にしてボタンを押してください。'};
 $('copy').onclick=()=>{const t=$('rCode');const done=()=>{$('copy').textContent='コピーしました'};const sel=()=>{t.focus();t.select();$('copy').textContent='選択しました。コピーしてください'};
   try{navigator.clipboard.writeText(t.value).then(done,sel)}catch(e){sel()}};
 const show=(id,v)=>$(id).hidden=!v;
-$('make').onclick=()=>{me=analyze(pad,'あなたの絵');if(!me){$('hint').hidden=false;$('hint').innerHTML='線が足りません。<br>もう少し大きく描いてください。';return}
-  meCode=enc(strokes);$('cKan').textContent='鑑定：これは「'+me.kantei+'」ですね。違っても回します。';$('cImg').src=pad.toDataURL();$('cType').textContent='判定結果　変さ '+me.weird+'／100';$('cName').textContent=me.type;$('cAbil').textContent='能力：'+me.desc;
+let stage=1,wins=0,foe=null,best=0,streakShown=0;try{best=+localStorage.getItem('ob_best')||0}catch(e){}
+const LEGN=['うんち','巨大な目','にじ','ただの点'],attr=a=>`色:${COLN[a.ci]}・太さ:${TKN[a.tk]}・形:${a.sh<0?'規格外':SHN[a.sh]}`;
+function renderFoe(){$('fImg').src=foe.cv.toDataURL();$('fTitle').textContent=(foe.duel?'対戦コードの相手：':`第${foe.lv}戦の相手：`)+foe.name+(foe.aura?'（オーラ持ち）':'');$('fInfo').textContent=`${foe.type}／${attr(foe)}`}
+const LAST=10,AURA=['うんち','巨大な目','にじ'];let lastBoss='';
+function newFoe(){const boss=stage>=LAST-1,pool=boss?AURA.filter(n=>n!=lastBoss):Object.keys(DOODLES).filter(n=>!LEGN.includes(n));let a=null;
+  while(!a){const n=pick(pool);a=analyze(doodleCanvas(n),n);if(a&&a.leg!=boss)a=null;else if(a&&boss)lastBoss=n}a.lv=stage;foe=a;renderFoe()}
+function showCard(){const v=aff(me,foe);
+  $('cKan').textContent='鑑定：これは「'+me.kantei+'」ですね。違っても回します。';$('cImg').src=pad.toDataURL();$('cType').textContent='判定結果　変さ '+me.weird+'／100　'+attr(me);$('cName').textContent=me.type;$('cAbil').textContent='能力：'+me.desc;
+  if(mus.name!='draw')setTrack('draw');
+  $('back').hidden=stage>1;
+  $('cAff').innerHTML=`${foe.duel?'対戦コード':'第'+foe.lv+'戦'}の相手「${foe.name}」との相性<br>色 ${COLN[me.ci]}対${COLN[foe.ci]}：${AW(v[0])}　太さ ${TKN[me.tk]}対${TKN[foe.tk]}：${AW(v[1])}　形：${AW(v[2])}`;
   $('cBars').innerHTML=[['攻撃','atk'],['重さ','wt'],['回転','spin'],['安定','stab'],['速さ','spd']].map(([l,k])=>`<div class="bar"><span>${l}</span><i><b style="width:${me.st[k]}%"></b></i><span>${me.st[k]}</span></div>`).join('');
-  show('cardO',true)};
-$('back').onclick=()=>show('cardO',false);
+  show('cardO',true)}
+const toDraw=()=>{if(mus.name!='draw')setTrack('draw');show('cardO',false);show('resO',false);show('battle',false);show('draw',true);running=false};
+$('make').onclick=()=>{me=analyze(pad,'あなたの絵');if(!me){$('hint').hidden=false;$('hint').innerHTML='線が足りません。<br>もう少し大きく描いてください。';return}meCode=enc(strokes);showCard()};
+$('back').onclick=toDraw;
 $('fight').onclick=()=>{show('cardO',false);startBattle()};
-$('again').onclick=()=>{show('resO',false);startBattle()};
-$('redraw').onclick=()=>{show('resO',false);show('battle',false);show('draw',true);running=false};
+$('again').onclick=()=>{show('resO',false);showCard()};
+$('redraw').onclick=()=>{if(foe.duel){newFoe();$('code').value='';$('codeMsg').hidden=true}toDraw()};
+const renderBest=()=>$('bestN').textContent=best;renderBest();
+newFoe();
 
 /* ---------- 音 ---------- */
 let ac=null,sound=true;
-function hitSound(p){if(!sound)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
+function hitSound(p){if(!sound)return;try{actx();const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
   o.type=pick(['square','sawtooth','triangle']);o.frequency.setValueAtTime(rnd(90,160)+p*220,t);o.frequency.exponentialRampToValueAtTime(40,t+.18);
-  g.gain.setValueAtTime(.12+p*.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.22)}catch(e){}}
-function tone(f,dur){if(!sound)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
-  o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur)}catch(e){}}
-$('snd').onclick=()=>{sound=!sound;$('snd').textContent='音 '+(sound?'ON':'OFF')};
+  g.gain.setValueAtTime(.045+p*.045,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.22)}catch(e){}}
+function tone(f,dur){if(!sound)return;try{actx();const t=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
+  o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur)}catch(e){}}
+
+/* ---------- BGM: おもちゃの楽隊。少し音程がよれるリコーダー風の主旋律 + ブンチャッ伴奏 ---------- */
+let mg=null,nb=null;const VOL=.14,applyVol=()=>{if(mg)mg.gain.value=sound?VOL*(mus.name&&mus.name!='draw'?.5:1):0}; // 対戦中の曲はさらに半分
+const mus={name:'draw',track:null,step:0,next:0,rate:1},mtof=m=>440*2**((m-69)/12);
+function actx(){if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=sound?VOL:0;const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=5200;mg.connect(lp).connect(ac.destination);
+    nb=ac.createBuffer(1,ac.sampleRate*.3,ac.sampleRate);const d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  if(ac.state=='suspended')ac.resume();return ac}
+function voice(m,t,d,type,vol,det=0,vib=0){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=mtof(m);o.detune.value=det;
+  if(vib){const l=ac.createOscillator(),lg=ac.createGain();l.frequency.value=6;lg.gain.value=vib;l.connect(lg).connect(o.detune);l.start(t);l.stop(t+d+.05)}
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol,t+.012);g.gain.setValueAtTime(vol,t+d*.6);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(mg);o.start(t);o.stop(t+d+.03)}
+function drum(k,t){const g=ac.createGain();g.connect(mg);
+  if(k=='k'){const o=ac.createOscillator();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);g.gain.setValueAtTime(.55,t);g.gain.exponentialRampToValueAtTime(.001,t+.16);o.connect(g);o.start(t);o.stop(t+.18);return}
+  const n=ac.createBufferSource(),f=ac.createBiquadFilter();n.buffer=nb;f.type=k=='s'?'bandpass':'highpass';f.frequency.value=k=='s'?1800:7000;const d=k=='s'?.13:.04;
+  g.gain.setValueAtTime(k=='s'?.28:.09,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f).connect(g);n.start(t);n.stop(t+d+.02)}
+const mkTrack=(bpm,style,roots,mel)=>{const ev={};mel.forEach(([st,m,l])=>(ev[st]=ev[st]||[]).push([m,l]));return{bpm,style,roots,ev,len:roots.length*16}};
+const MEL_B=[[0,76,2],[2,79,2],[4,84,3],[8,79,2],[10,76,2],[12,74,2],[14,72,2],[16,77,2],[18,81,2],[20,84,3],[24,81,2],[26,77,2],[28,76,1],[29,77,1],[30,79,2],
+  [32,79,2],[34,83,2],[36,86,3],[40,83,2],[42,79,2],[44,77,2],[46,74,2],[48,72,2],[50,73,1],[51,74,1],[52,75,1],[53,76,1],[54,79,2],[56,84,4],[62,67,2],
+  [64,81,3],[67,84,1],[68,81,2],[70,76,2],[72,81,3],[75,84,1],[76,88,4],[80,77,3],[83,81,1],[84,77,2],[86,72,2],[88,77,3],[91,81,1],[92,84,4],
+  [96,78,2],[98,81,2],[100,86,2],[102,81,2],[104,78,2],[106,74,2],[108,78,2],[110,81,2],[112,79,2],[114,83,2],[116,86,2],[118,89,2],[120,91,4],[124,79,1],[125,77,1],[126,74,1],[127,71,1]];
+const ROOT_B=[[36,0],[41,0],[43,0],[36,0],[45,1],[41,0],[38,0],[43,0]]; // [根音, 短調か]
+const toMinor=m=>[4,9,11].includes(m%12)?m-1:m;
+const TR={battle:mkTrack(152,'march',ROOT_B,MEL_B),
+  boss:mkTrack(170,'boss',ROOT_B.map(([r])=>[r,1]),MEL_B.map(([a,m,l])=>[a,toMinor(m)-12,l])),
+  draw:mkTrack(92,'lazy',[[36,0],[45,1],[41,0],[43,0]],[[0,72,2],[4,76,2],[8,79,4],[14,76,2],[16,69,2],[20,72,2],[24,76,4],[30,72,2],[32,65,2],[36,69,2],[40,72,4],[44,74,2],[46,72,2],[48,67,2],[52,71,2],[56,74,3],[60,79,2],[62,77,2]])};
+function sched(T,s,t){const sd=60/T.bpm/4/mus.rate,b=s%16,[root,mn]=T.roots[s>>4],third=mn?15:16,lazy=T.style=='lazy',boss=T.style=='boss';
+  (T.ev[s]||[]).forEach(([m,l])=>{const dt=rnd(-10,10); // わざと少しよれる
+    if(lazy){voice(m,t,Math.min(.5,l*sd*1.6),'triangle',.2,dt);voice(m+12,t,.12,'sine',.05,dt)}
+    else{voice(m,t,l*sd*.92,'square',boss?.1:.085,dt,12);voice(m,t,l*sd*.92,boss?'sawtooth':'triangle',.07,dt+9,12)}});
+  if(lazy){if(b==0||b==8)voice(root+(b?7:0),t,sd*6,'sine',.28);if(b==6||b==14)[12,third+12,19].forEach(i=>voice(root+12+i,t,.25,'triangle',.05));if(b==4||b==12)drum('h',t);if(b==0)drum('k',t);return}
+  if(b%8==0)voice(root,t,sd*3,boss?'sawtooth':'triangle',boss?.17:.3);if(b%8==4)voice(root+7,t,sd*3,boss?'sawtooth':'triangle',boss?.15:.26);
+  if(b%4==2)[12,third+12,19+12].forEach(i=>voice(root+12+i-12,t,sd*1.2,'square',.032));
+  if(boss&&b%2==1)voice(root+12,t,sd*.7,'sawtooth',.05);
+  if(b%8==0)drum('k',t);if(b%8==4)drum('s',t);if(s%2==0)drum('h',t);if(s>=T.len-4)drum('s',t);if(boss&&b==14)drum('k',t)}
+setInterval(()=>{if(!ac||!mus.track||ac.state!='running')return;if(mus.next<ac.currentTime-.3)mus.next=ac.currentTime+.05;
+  while(mus.next<ac.currentTime+.14){sched(mus.track,mus.step,mus.next);mus.next+=60/mus.track.bpm/4/mus.rate;mus.step=(mus.step+1)%mus.track.len}},30);
+function setTrack(name,delay=0){mus.name=name;applyVol();mus.track=name?TR[name]:null;mus.step=0;mus.rate=1;mus.next=ac?ac.currentTime+.06+delay:0}
+function jingle(win){if(!sound)return;try{actx();const t=ac.currentTime+.05;
+  if(win){[72,76,79,84,88].forEach((m,i)=>voice(m,t+i*.09,.2,'square',.11,0,10));[76,79,84].forEach(m=>voice(m,t+.5,.8,'square',.08,rnd(-8,8),14));drum('k',t+.5);drum('s',t+.5)}
+  else[[62,.36],[61,.36],[60,.36],[59,1.1]].reduce((a,[m,d],i)=>{voice(m,a,d,'sawtooth',.13,-15,i==3?40:8);voice(m-12,a,d,'triangle',.12);return a+d},t)}catch(e){}}
+addEventListener('pointerdown',()=>{try{actx();if(!mus.track&&mus.name)setTrack(mus.name)}catch(e){}});
+const sndToggle=()=>{sound=!sound;['snd','snd2'].forEach(i=>$(i).textContent='音 '+(sound?'ON':'OFF'));applyVol()};
+$('snd').onclick=$('snd2').onclick=sndToggle;
 
 /* ---------- 3D ---------- */
 let renderer,scene,cam,tops=[],running=false,sparks,sp,eye,crowd=[],rings=[],camMode='auto',autoMode='side',autoT=0,nearT=0,shake=0,slow=0,
-    auraTex=null,phase='',phaseT=0,order=[],battleT=0,talkT=0,dashCd=0,last=0,excite=0;
+    auraTex=null,tense=0,phase='',phaseT=0,order=[],battleT=0,talkT=0,dashCd=0,last=0,excite=0;
 const gl=$('gl');
 function tex(draw,s=512){const c=document.createElement('canvas');c.width=c.height=s;draw(c.getContext('2d'),s);const t=new THREE.CanvasTexture(c);return t}
 function initGL(){
@@ -379,7 +459,6 @@ function initGL(){
   // 火花
   const n=500,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(-99),3));g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3),3));
   sparks=new THREE.Points(g,new THREE.PointsMaterial({size:.32,vertexColors:true}));sparks.frustumCulled=false;scene.add(sparks);sp={v:new Float32Array(n*3),l:new Float32Array(n),i:0,n};
-  renderer.domElement.addEventListener('pointerdown',dash);
   addEventListener('resize',resize);
 }
 function resize(){if(!renderer)return;const w=gl.clientWidth,h=gl.clientHeight;if(!w)return;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
@@ -405,17 +484,19 @@ function buildTop(a,isMe){
   if(isMe){const ar=new THREE.Mesh(new THREE.ConeGeometry(.35,.7,4),new THREE.MeshBasicMaterial({color:'#f6c21a'}));ar.rotation.x=Math.PI;ar.position.y=2.6;root.add(ar);root.userData.ar=ar}
   scene.add(root);
   let abil=a.abil;if(abil=='random')abil=pick(['pull','ghost','chaos','burst','bounce']);
-  const s=a.st,sMax=70+s.spin*.7;
-  return{hits:0,a,isMe,root,spin,tilt,prec,U,abil,prof:Array.from(a.prof,v=>v*U),mean:a.mean*U,x:0,z:0,vx:0,vz:0,y:9,th:rnd(0,6),pp:rnd(0,6),
-    sMax,sp:sMax,mass:.6+s.wt/40,alive:true,out:0,fx:0,abT:rnd(2,4),dir:Math.random()<.5?1:-1,dead:0,vy:0}
+  const s=a.st,lv=a.lv||1,sc=isMe||a.duel?1:.6+.07*(lv-1),sMax=(70+s.spin*.7)*sc;
+  return{hits:0,adv:0,crush:1,pw:sc,a,isMe,root,spin,tilt,prec,U,abil,prof:Array.from(a.prof,v=>v*U),mean:a.mean*U,x:0,z:0,vx:0,vz:0,y:9,th:rnd(0,6),pp:rnd(0,6),
+    sMax,sp:sMax,mass:(.6+s.wt/40)*(isMe?1:1+.03*(lv-1)),alive:true,out:0,fx:0,abT:rnd(2,4),dir:Math.random()<.5?1:-1,dead:0,vy:0}
 }
 const radAt=(t,ang)=>{const b=(((ang+t.th)/6.2832*NB)%NB+NB)%NB|0;return Math.max(t.prof[b],t.mean*.45)};
 
+// 実力が近いほど長引かせ、圧倒的な差があるときは強い側の一撃を重くしてすぐ決着させる
+function setMatch(){const pwr=t=>{const q=t.a.st;return(q.atk+q.wt+q.spin+q.stab+q.spd)*t.pw*(1+.15*t.adv)*(t.a.leg?1.6:1)},pa=pwr(tops[0]),pb=pwr(tops[1]),ratio=Math.min(pa,pb)/Math.max(pa,pb);
+  tense=1-clamp((1-ratio)*2.5,0,1);const c=ratio<.45?1+(.45-ratio)/.45*9:1;tops[0].crush=pa>pb?c:1;tops[1].crush=pb>pa?c:1;return ratio}
 function startBattle(){
   show('draw',false);show('battle',true);if(!renderer)initGL();resize();
   tops.forEach(t=>scene.remove(t.root));rings.forEach(r=>scene.remove(r.m));rings=[];document.querySelectorAll('.pop').forEach(e=>e.remove());
-  const names=Object.keys(DOODLES).sort(()=>Math.random()-.5).slice(0,1);
-  const list=[me,...names.map(n=>analyze(doodleCanvas(n),n))];if(rival)list[1]=analyze(rival,'挑戦者の絵');
+  const list=[me,foe];
   tops=list.map((a,i)=>{const t=buildTop(a,i==0),ang=i*Math.PI+.6;t.x=Math.cos(ang)*5.5;t.z=Math.sin(ang)*5.5;return t});
   $('hud').innerHTML=tops.map((t,i)=>`<div class="hp ${t.isMe?'me':''}" id="hp${i}"><img src="${t.a.cv.toDataURL()}" alt=""><div style="min-width:0"><span>${t.a.name}（${t.a.type}）</span><i><b></b></i></div></div>`).join('');
   // 強いほうにオーラ
@@ -426,7 +507,12 @@ function startBattle(){
     const m=new THREE.Mesh(new THREE.CylinderGeometry(r*1.25,r*.8,h,20,1,true),new THREE.MeshBasicMaterial({map:auraTex,color:c,transparent:true,opacity:.75-i*.15,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
     m.position.y=h/2;strong.root.add(m);strong.aura.push(m)});
   const L=new THREE.PointLight('#f6c21a',1.2,9);L.position.y=2;strong.root.add(L);strong.aura.push(L)});
-  order=[];phase='count';phaseT=0;battleT=0;slow=0;shake=0;autoT=0;autoMode='side';say('土俵をタップすると、あなたの絵がそこへ突進します。');
+  const av=aff(me,foe),ad=av[0]+av[1]+av[2];tops[0].adv=ad;tops[1].adv=-ad;
+  $('hud').innerHTML+=`<div class="hp" style="display:block">${foe.duel?'コード対戦':'第'+foe.lv+'戦'}　相性　色:${AW(av[0])} 太さ:${AW(av[1])} 形:${AW(av[2])}</div>`;
+  // 実力が近いほど削り合いと吹き飛びを弱めて、決着を少し遅らせる
+  setMatch();setTrack(null);
+  $('streak').textContent=foe.duel?'コード対戦':wins?wins+'連勝中':'第1戦';
+  order=[];phase='count';phaseT=0;battleT=0;slow=0;shake=0;autoT=0;autoMode='side';say('描いたあとは見守るだけ。絵の形がすべてを決めます。');
   if(!running){running=true;last=performance.now();requestAnimationFrame(loop)}
 }
 document.querySelectorAll('#cams [data-c]').forEach(b=>b.onclick=()=>{camMode=b.dataset.c;document.querySelectorAll('#cams [data-c]').forEach(x=>x.classList.toggle('on',x==b))});
@@ -449,14 +535,15 @@ function collide(A,B){
   if(A.fx>.25||B.fx>.25)return;
   A.x-=nx*ov*B.mass/tm;A.z-=nz*ov*B.mass/tm;B.x+=nx*ov*A.mass/tm;B.z+=nz*ov*A.mass/tm;
   const vn=(A.vx-B.vx)*nx+(A.vz-B.vz)*nz,tipA=ra/A.mean,tipB=rb/B.mean;
-  let kick=4.5+Math.max(0,vn)*1.3+(A.sp+B.sp)*.02;
-  const kA=kick*(B.abil=='bounce'?1.7:1)*(1+B.a.st.atk*.006*tipB),kB=kick*(A.abil=='bounce'?1.7:1)*(1+A.a.st.atk*.006*tipA);
-  A.vx-=nx*kA*B.mass/tm*2;A.vz-=nz*kA*B.mass/tm*2;B.vx+=nx*kB*A.mass/tm*2;B.vz+=nz*kB*A.mass/tm*2;
+  let kick=(4.5+Math.max(0,vn)*1.3+(A.sp+B.sp)*.02)*(1-.3*tense)*.3;
+  const kA=kick*(B.abil=='bounce'?1.7:1)*(1+B.a.st.atk*.006*tipB)*(1+.1*B.adv)*B.crush,kB=kick*(A.abil=='bounce'?1.7:1)*(1+A.a.st.atk*.006*tipA)*(1+.1*A.adv)*A.crush;
+  const gA=(A.a.leg?clamp(.4+.3*B.adv,.4,1):1)*Math.sqrt(B.pw/A.pw),gB=(B.a.leg?clamp(.4+.3*A.adv,.4,1):1)*Math.sqrt(A.pw/B.pw); // 最強の型は吹き飛びにくい
+  A.vx-=nx*kA*B.mass/tm*2*gA;A.vz-=nz*kA*B.mass/tm*2*gA;B.vx+=nx*kB*A.mass/tm*2*gB;B.vz+=nz*kB*A.mass/tm*2*gB;
   // 回転による横っ飛び
-  A.vx+=-nz*A.dir*2;A.vz+=nx*A.dir*2;B.vx+=nz*B.dir*2;B.vz+=-nx*B.dir*2;
-  const dmg=(X,Y,tip)=>(2.5+X.a.st.atk*.1*tip*(X.abil=='tip'?1.4:1)+Math.max(0,vn)*.5)*(100/(55+Y.a.st.wt))*(X.a.leg?1.35:1);
-  B.sp-=dmg(A,B,tipA);A.sp-=dmg(B,A,tipB);A.hits++;B.hits++;
-  [A,B].forEach(t=>{if(t.a.leg){t.sp=Math.min(t.sMax,t.sp+3.5)}});
+  A.vx+=-nz*A.dir*2*gA;A.vz+=nx*A.dir*2*gA;B.vx+=nz*B.dir*2*gB;B.vz+=-nx*B.dir*2*gB;
+  const dmg=(X,Y,tip)=>(2.5+X.a.st.atk*.1*tip*(X.abil=='tip'?1.4:1)+Math.max(0,vn)*.5)*(100/(55+Y.a.st.wt))*(X.a.leg?1.35:1)*X.crush*X.pw*Math.max(.5,1+.15*X.adv)*(1-.35*tense)*.85;
+  B.sp-=dmg(A,B,tipA)*(B.a.leg&&A.adv<2?.7:1);A.sp-=dmg(B,A,tipB)*(A.a.leg&&B.adv<2?.7:1);A.hits++;B.hits++;
+  [A,B].forEach(t=>{if(t.a.leg){t.sp=Math.min(t.sMax,t.sp+2.8)}});
   A.fx=B.fx=.14;const pw=clamp(kick/14,0,1),mx=A.x+nx*ra,mz=A.z+nz*ra;
   burst(mx,.8,mz,8+pw*30|0,(A.abil=='poop'||B.abil=='poop')?['#7a4a1e','#a8703a','#f6c21a']:['#f6c21a','#fff','#e2412b'],.6+pw);
   hitSound(pw);excite=Math.max(excite,pw);shake=Math.max(shake,pw*.35);
@@ -469,6 +556,7 @@ function step(dt){
     t.fx-=dt;let tg=null,bd=1e9;for(const o of alive)if(o!=t){const d=Math.hypot(o.x-t.x,o.z-t.z);if(d<bd){bd=d;tg=o}}
     const acc=1.6+t.a.st.spd*.045;let ax=-t.x*1.3,az=-t.z*1.3;
     if(tg&&!(t.isMe&&dashCd>.6)){ax+=(tg.x-t.x)/bd*acc;az+=(tg.z-t.z)/bd*acc}
+    if(t.a.leg){const d=Math.hypot(t.x,t.z);if(d>R*.6){const k=(d-R*.6)*12*(t.adv<=-2?0:t.adv<0?.5:1);ax-=t.x/d*k;az-=t.z/d*k}} // 土俵際の踏ん張り
     ax+=-t.z*.5*t.dir;az+=t.x*.5*t.dir;
     const wob=(1-t.a.st.stab/100)*2.2+(1-t.sp/t.sMax)*2;ax+=rnd(-1,1)*wob*3;az+=rnd(-1,1)*wob*3;
     for(const o of alive)if(o!=t&&o.abil=='pull'){const dx=o.x-t.x,dz=o.z-t.z,d=Math.hypot(dx,dz)||1;if(d<8){ax+=dx/d*4.5;az+=dz/d*4.5}}
@@ -480,21 +568,21 @@ function step(dt){
     if(t.abil=='eye'&&t.abT<=0){t.abT=3.2;tone(300,.4);for(const o of alive)if(o!=t){o.vx=o.vz=0;o.sp-=7;popText('見られている',new THREE.Vector3(o.x,1.8,o.z),28);burst(o.x,.6,o.z,14,['#fff','#1d1a16'],.5)}}
     if(t.abil=='poop'&&Math.random()<.15)burst(t.x,.5,t.z,1,['#7a4a1e','#5c3613'],.3);
     const drag=Math.exp(-dt*(.7+t.mass*.12));t.vx=(t.vx+ax*dt)*drag;t.vz=(t.vz+az*dt)*drag;t.x+=t.vx*dt;t.z+=t.vz*dt;
-    t.sp-=dt*t.sMax/52*(1.45-t.a.st.stab/100*.9)*(battleT>40?2.5:1);
+    t.sp-=dt*t.sMax/42*(1.45-t.a.st.stab/100*.9)*(1+Math.max(0,battleT-22-10*tense)*.35)*(1-.3*tense);
     t.th+=t.dir*(5+17*clamp(t.sp/t.sMax,0,1)+(t.abil=='speed'?6:0))*dt;
   }
   for(let i=0;i<alive.length;i++)for(let j=i+1;j<alive.length;j++)collide(alive[i],alive[j]);
   for(const t of alive){if(Math.hypot(t.x,t.z)>R+.3)ko(t,1);else if(t.sp<=0)ko(t,2)}
   const left=tops.filter(t=>t.alive);
-  if(left.length<=1&&phase=='fight'){phase='end';phaseT=0;if(left[0])order.unshift(left[0])}
+  if(left.length<=1&&phase=='fight'){setTrack(null);phase='end';phaseT=0;if(left[0])order.unshift(left[0])}
   talkT+=dt;if(talkT>5.5){const t=pick(tops);say(Math.random()<.5?pick(IDLE):`解説：${t.a.name}は${t.a.type}です。たぶん。`)}
 }
 function loop(now){
   if(!running)return;requestAnimationFrame(loop);let rdt=Math.min(.033,(now-last)/1000);last=now;
   slow-=rdt;const dt=rdt*(slow>0?.18:1);phaseT+=rdt;const T=now/1000;
   if(phase=='count'){const n=3-Math.floor(phaseT/.8);$('count').textContent=n>0?n:'GO!';if(Math.floor(phaseT/.8)!=Math.floor((phaseT-rdt)/.8))tone(n>0?440:880,.15);
-    tops.forEach(t=>{t.y=Math.max(0,9-phaseT*4);t.th+=t.dir*20*rdt});if(phaseT>3){phase='fight';$('count').textContent='';tops.forEach(t=>{t.y=0;burst(t.x,.3,t.z,14,['#efe6cf','#c79a63'],.6)});shake=.4;const S=tops.find(t=>t.aura);if(S){popText('強者のオーラ',new THREE.Vector3(S.x,3,S.z),34);say(`実況：${S.a.name}から、強そうなオーラが出ています。絵なのに。`)}else say('実況：はじまりました。絵が回っています。')}}
-  else if(phase=='fight')step(dt);
+    tops.forEach(t=>{t.y=Math.max(0,9-phaseT*4);t.th+=t.dir*20*rdt});if(phaseT>3){phase='fight';setTrack(foe.aura?'boss':'battle');$('count').textContent='';tops.forEach(t=>{t.y=0;burst(t.x,.3,t.z,14,['#efe6cf','#c79a63'],.6)});shake=.4;const S=tops.find(t=>t.aura);if(S){popText('強者のオーラ',new THREE.Vector3(S.x,3,S.z),34);say(`実況：${S.a.name}から、強そうなオーラが出ています。絵なのに。`)}else say(Math.max(tops[0].crush,tops[1].crush)>1.5?'実況：実力差がありすぎます。すぐ終わります。':'実況：はじまりました。絵が回っています。')}}
+  else if(phase=='fight'){step(dt);mus.rate=tops.some(t=>t.alive&&t.sp/t.sMax<.3)?1.12:1}
   else if(phase=='end'&&phaseT>2.2){phase='done';result()}
   // 見た目
   for(const t of tops){
@@ -530,7 +618,7 @@ function resultCard(r,title){const c=document.createElement('canvas');c.width=c.
   x.fillStyle='#b98b56';x.fillRect(0,0,640,640);x.fillStyle='#efe6cf';x.fillRect(18,18,604,604);x.lineWidth=6;x.strokeStyle='#1d1a16';x.strokeRect(18,18,604,604);
   x.fillStyle='#1d1a16';x.font='30px '+D;x.fillText('お絵描きブレード',40,68);
   x.fillStyle='#fff';x.fillRect(40,90,270,270);x.lineWidth=4;x.strokeRect(40,90,270,270);x.drawImage(pad,40,90,270,270);
-  x.fillStyle=r==1?'#e2412b':'#2a56c6';x.font='96px '+D;x.fillText(r+'位',336,180);
+  x.fillStyle='#e2412b';x.font=(foe.duel?'84px ':'120px ')+D;x.fillText(streakShown,330,186);const nw=x.measureText(streakShown).width;x.fillStyle='#1d1a16';x.font='40px '+D;x.fillText(foe.duel?'':'連勝',338+nw,186);
   x.fillStyle='#1d1a16';x.font='20px '+H;x.fillText('称号',336,222);x.font='30px '+D;let y=wrap(x,title,336,260,270,38);
   x.font='20px '+H;wrap(x,me.type,336,y+6,270,26);
   x.fillStyle='#f6c21a';x.fillRect(40,378,560,44);x.fillStyle='#1d1a16';x.font='21px '+H;x.fillText('鑑定：「'+me.kantei+'」',52,408);
@@ -539,18 +627,31 @@ function resultCard(r,title){const c=document.createElement('canvas');c.width=c.
   x.font='22px '+D;x.fillText('最強の絵を描け。',40,608);x.font='18px '+H;x.textAlign='right';x.fillText('変さ '+me.weird+'／100',600,608);
   return c.toDataURL()}
 function result(){
-  const rest=tops.filter(t=>!order.includes(t));order=[...order,...rest];const w=order[0],r=order.indexOf(tops[0])+1,p=tops[0],s=me.st;
-  const WIN={eye:'目が合ったら終わり',rainbow:'色の暴力',dot:'ただの点、最強',poop:'茶色い暴君',speed:'回りすぎた棒',ghost:'当たらない穴',pull:'すべてを吸う輪',burst:'迷惑な星',bounce:'触るな危険',tip:'尖りの王',heavy:'動かざる絵',stable:'ただの丸、最強',chaos:'本人も驚く優勝',random:'理由なき王者'};
-  const title=r==1?WIN[me.abil]:p.out==1?'存在が場外':'ただの絵に戻った者';
+  const won=order[0]===tops[0],r=won?1:2,p=tops[0],w=order[0],s=me.st,lvNow=foe.lv,duel=!!foe.duel;if(won&&!duel)wins++;streakShown=duel?(won?'勝ち':'負け'):wins;
+  const isNew=wins>best;
+  if(wins>best){best=wins;renderBest();try{localStorage.setItem('ob_best',best)}catch(e){}}
+  const WIN={eye:'目が合ったら終わり',rainbow:'色の暴力',dot:'ただの点、最強',poop:'茶色い暴君',speed:'回りすぎた棒',ghost:'当たらない穴',pull:'すべてを吸う輪',burst:'迷惑な星',bounce:'触るな危険',tip:'尖りの王',heavy:'動かざる絵',stable:'ただの丸、最強',chaos:'本人も驚く勝利',random:'理由なき王者'};
+  const title=won?WIN[me.abil]:p.out==1?'存在が場外':'ただの絵に戻った者';
   let why;
   if(r==1)why='勝因：'+(p.hits<4?'ほとんど戦わずに残りました。それも強さです。':s.atk>=s.stab?'トゲと角で相手の回転を削り切りました。':'回転が最後まで続きました。');
   else if(p.out==1)why='敗因：'+(s.wt<45?'軽すぎて弾き飛ばされました。中を塗りつぶすか、大きく描くと重くなります。':'土俵の端で当たり負けました。横長にすると飛ばされにくくなります。');
   else{const low=['stab','spin','atk'].sort((a,b)=>s[a]-s[b])[0];
     why='敗因：'+{stab:'重心がずれてフラつきました。左右対称に近づけるか、丸みを足すと長持ちします。',spin:'回転が先に尽きました。細長くするか、輪郭を丸くすると回転が伸びます。',atk:'削り負けました。トゲや尖った角を足すと攻撃が上がります。'}[low]}
-  $('rTitle').textContent=r==1?'あなたの絵が最強でした':r+'位でした';
-  $('rText').textContent=r==1?`${me.type}の勝利。絵の上手さは関係ありませんでした。`:`優勝は「${w.a.name}」（${w.a.type}）。`;
+  if(!won&&p.adv<0)why+='相性も不利でした。';if(won&&p.adv>0)why+='相性も味方しました。';
+  if(duel){ // 対戦コード: どちらが強いかだけを決める
+    $('rBig').innerHTML=`<b>${won?'勝ち':'負け'}</b>`;$('rBest').textContent='対戦コード勝負（連勝記録には数えません）';$('streak').textContent=won?'勝ち':'負け';
+    $('rTitle').textContent=won?'あなたの絵のほうが強い':'相手の絵のほうが強い';$('rText').textContent='同じ条件での1対1です。相手の強化はありません。';
+    $('rWhy').textContent=why;$('rImg').src=resultCard(r,title);$('rCode').value=meCode;$('copy').textContent='対戦コードをコピー';
+    $('again').textContent='もう一度この相手と';$('redraw').textContent='連勝モードに戻る';$('redraw').hidden=false;$('rRank').hidden=true;
+  }else{const clear=false;
+  $('rBig').innerHTML=`<b>${wins}</b>連勝`+(won?'中':'');$('rBest').innerHTML=`ベスト記録 ${best}連勝`+(isNew?'<em>新記録</em>':'');$('streak').textContent=wins+'連勝'+(won?'中':'');
+  $('rTitle').textContent=clear?`全${LAST}戦制覇`:won?`第${lvNow}戦 勝利（${wins}連勝中）`:`${wins}連勝で終了`;
+  $('rText').textContent=(clear?'オーラ持ちまで倒しました。この絵が最強です。':won?'次の相手は少し強くなります。絵はこのまま戦い続けます。':`「${w.a.name}」（${w.a.type}）に敗れました。第1戦からやり直しです。`);
   $('rWhy').textContent=why;$('rImg').src=resultCard(r,title);$('rCode').value=meCode;$('copy').textContent='対戦コードをコピー';
-  $('rRank').innerHTML=order.map(t=>`<li>${t.a.name}（${t.a.type}）</li>`).join('');show('resO',true);tone(r==1?990:220,.6)}
+  const go=won&&!clear;$('again').textContent=go?'次の相手へ':'同じ絵で最初から';$('redraw').textContent='新しい絵で最初から';$('redraw').hidden=go;$('rRank').hidden=true;
+  if(go)stage++;else{stage=1;wins=0;lastBoss=''}newFoe();}
+  
+  show('resO',true);jingle(won);setTrack('draw',won?1.6:2.6)}
 })();
 </script>
 
